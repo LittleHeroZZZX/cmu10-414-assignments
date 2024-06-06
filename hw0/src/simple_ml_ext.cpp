@@ -65,7 +65,7 @@ void softmax_regression_epoch_cpp(const float *X, const unsigned char *y,
         delete[] logits;
         delete[] softmax;
     }
-
+}
 
 /**
  * This is the pybind11 code that wraps the function above.  It's only role is
