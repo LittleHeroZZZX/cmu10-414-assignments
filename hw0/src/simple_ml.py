@@ -105,8 +105,8 @@ def softmax_regression_epoch(X, y, theta, lr = 0.1, batch=100):
         None
     """
     ### BEGIN YOUR CODE
-    total_epochs = (X.shape[0] + batch - 1) // batch
-    for i in range(total_epochs):
+    total_batches = (X.shape[0] + batch - 1) // batch
+    for i in range(total_batches):
         X_batch = X[i*batch:(i+1)*batch]
         y_batch = y[i*batch:(i+1)*batch]
         E_batch = np.eye(theta.shape[1])[y_batch]
