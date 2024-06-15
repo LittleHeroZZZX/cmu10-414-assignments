@@ -98,7 +98,31 @@ def nn_epoch(X, y, W1, W2, lr=0.1, batch=100):
     """
 
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    batch_cnt = (X.shape[0] + batch - 1) // batch
+    num_classes = W2.shape[1]
+    one_hot_y = np.eye(num_classes)[y]
+    for batch_idx in range(batch_cnt):
+        start_idx = batch_idx * batch
+        end_idx = min(X.shape[0], (batch_idx+1)*batch)
+        X_batch = X[start_idx:end_idx, :]
+        y_batch = one_hot_y[start_idx:end_idx]
+        X_tensor = ndl.Tensor(X_batch)
+        y_tensor = ndl.Tensor(y_batch) 
+        first_logits = X_tensor @ W1 # type: ndl.Tensor
+        first_output = ndl.relu(first_logits) # type: ndl.Tensor
+        second_logits = first_output @ W2 # type: ndl.Tensor
+        loss_err = softmax_loss(second_logits, y_tensor) # type: ndl.Tensor
+        loss_err.backward()
+        
+        new_W1 = ndl.Tensor(W1.numpy() - lr * W1.grad.numpy())
+        new_W2 = ndl.Tensor(W2.numpy() - lr * W2.grad.numpy())
+        W1, W2 = new_W1, new_W2
+
+    return W1, W2
+
+
+
+
     ### END YOUR SOLUTION
 
 
