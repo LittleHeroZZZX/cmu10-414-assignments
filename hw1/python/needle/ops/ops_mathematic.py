@@ -233,7 +233,7 @@ class Summation(TensorOp):
             axes = list(range(len(shape)))
         for _ in axes:
             shape[_] = 1
-        return reshape(out_grad, shape)
+        return broadcast_to(reshape(out_grad, shape), a.shape)
         ### END YOUR SOLUTION
 
 
@@ -250,7 +250,7 @@ class MatMul(TensorOp):
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
         a, b = node.inputs
-        adjoint1 = out_grad@transpose(b)
+        adjoint1 = out_grad @ transpose(b)
         adjoint2 = transpose(a) @ out_grad
         adjoint1 = summation(adjoint1, axes=tuple(range(len(adjoint1.shape) - len(a.shape))))
         adjoint2 = summation(adjoint2, axes=tuple(range(len(adjoint2.shape) - len(b.shape))))
