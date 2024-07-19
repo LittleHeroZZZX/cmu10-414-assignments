@@ -13,10 +13,9 @@ TENSOR_COUNTER = 0
 
 # NOTE: we will import numpy as the array_api
 # as the backend for our computations, this line will change in later homeworks
-
 import numpy as array_api
-NDArray = numpy.ndarray
 
+NDArray = numpy.ndarray
 
 
 class Op:
@@ -365,7 +364,7 @@ class Tensor(Value):
     __rmatmul__ = __matmul__
 
 
-def compute_gradient_of_variables(output_tensor, out_grad):
+def compute_gradient_of_variables(output_tensor, out_grad) -> None:
     """Take gradient of output node with respect to each node in node_list.
 
     Store the computed result in the grad field of each Variable.
@@ -379,9 +378,19 @@ def compute_gradient_of_variables(output_tensor, out_grad):
 
     # Traverse graph in reverse topological order given the output_node that we are taking gradient wrt.
     reverse_topo_order = list(reversed(find_topo_sort([output_tensor])))
-
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    for node in reverse_topo_order:
+        node.grad = sum_node_list(node_to_output_grads_list[node])
+        if len(node.inputs) > 0:
+            gradient = node.op.gradient(node.grad, node)
+            if isinstance(gradient, tuple):
+                for i, son_node in enumerate(node.inputs):
+                    node_to_output_grads_list.setdefault(son_node, [])
+                    node_to_output_grads_list[son_node].append(gradient[i])
+            else:
+                node_to_output_grads_list.setdefault(node.inputs[0], [])
+                node_to_output_grads_list[node.inputs[0]].append(gradient)
+
     ### END YOUR SOLUTION
 
 
@@ -394,14 +403,25 @@ def find_topo_sort(node_list: List[Value]) -> List[Value]:
     sort.
     """
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    visited = dict()
+    topo_order = []
+    for node in node_list:
+        if not visited.get(node, False):
+            topo_sort_dfs(node, visited, topo_order)
+    return topo_order
+            
     ### END YOUR SOLUTION
 
 
-def topo_sort_dfs(node, visited, topo_order):
+def topo_sort_dfs(node, visited: dict, topo_order):
     """Post-order DFS"""
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    sons = node.inputs
+    for son in sons:
+        if not visited.get(son, False):
+            topo_sort_dfs(son, visited, topo_order)
+    visited[node] = True
+    topo_order.append(node)
     ### END YOUR SOLUTION
 
 
