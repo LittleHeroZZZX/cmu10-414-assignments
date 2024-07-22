@@ -16,6 +16,7 @@ import numpy as array_api
 
 class EWiseAdd(TensorOp):
     def compute(self, a: NDArray, b: NDArray):
+        assert a.shape == b.shape , "The shape of lhs {} and rhs {} should be the same".format(a.shape, b.shape)
         return a + b
 
     def gradient(self, out_grad: Tensor, node: Tensor):
@@ -43,6 +44,7 @@ def add_scalar(a, scalar):
 
 class EWiseMul(TensorOp):
     def compute(self, a: NDArray, b: NDArray):
+        assert a.shape == b.shape, "The shape of two tensors should be the same"
         return a * b
 
     def gradient(self, out_grad: Tensor, node: Tensor):
@@ -95,6 +97,7 @@ class EWisePow(TensorOp):
     """Op to element-wise raise a tensor to a power."""
 
     def compute(self, a: NDArray, b: NDArray) -> NDArray:
+        assert a.shape == b.shape, "The shape of two tensors should be the same"
         return a**b
 
     def gradient(self, out_grad, node):
@@ -117,6 +120,7 @@ class EWiseDiv(TensorOp):
 
     def compute(self, a, b):
         ### BEGIN YOUR SOLUTION
+        assert a.shape == b.shape, "The shape of two tensors should be the same"
         return array_api.true_divide(a, b)
         ### END YOUR SOLUTION
 
@@ -178,6 +182,13 @@ class Reshape(TensorOp):
 
     def compute(self, a):
         ### BEGIN YOUR SOLUTION
+        expect_size = 1
+        for i in self.shape:
+            expect_size *= i
+        real_size = 1
+        for i in a.shape:
+            real_size *= i
+        assert expect_size == real_size , "The reshape size is not compatible"
         return array_api.reshape(a, self.shape)
         ### END YOUR SOLUTION
 
@@ -197,6 +208,11 @@ class BroadcastTo(TensorOp):
 
     def compute(self, a):
         ### BEGIN YOUR SOLUTION
+        assert len(self.shape) >= len(a.shape), \
+            "The target shape's dimension count {} should be greater than \
+                or equal to the input shape's dimension count {}".format(len(self.shape), len(a.shape))
+        for i in range(len(a.shape)):
+            assert self.shape[i] == a.shape[i] or a.shape[i] == 1, "The shape of two tensors should be compatible"
         return array_api.broadcast_to(a, self.shape)
         ### END YOUR SOLUTION
 
@@ -205,7 +221,7 @@ class BroadcastTo(TensorOp):
         input_shape = node.inputs[0].shape
         ret = summation(out_grad, tuple(range(len(out_grad.shape) - len(input_shape))))
         for i, dim in enumerate(input_shape):
-            if dim == 1:
+            if dim == 1 and self.shape[i] != 1:
               ret = summation(ret, axes=(i,))
         return reshape(ret, input_shape)
         ### END YOUR SOLUTION
