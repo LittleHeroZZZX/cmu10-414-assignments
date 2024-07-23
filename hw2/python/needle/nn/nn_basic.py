@@ -89,10 +89,12 @@ class Linear(Module):
 
         ### BEGIN YOUR SOLUTION
         self.weight = init.kaiming_uniform(in_features, out_features, device=device, dtype=dtype)
+        self.weight = Parameter(self.weight, device=device, dtype=dtype)
         self.bias = None
         if bias:
             self.bias = init.kaiming_uniform(out_features, 1, device=device, dtype=dtype)
             self.bias = self.bias.transpose()
+            self.bias = Parameter(self.bias, device=device, dtype=dtype)
         ### END YOUR SOLUTION
 
     def forward(self, X: Tensor) -> Tensor:
@@ -185,7 +187,8 @@ class BatchNorm1d(Module):
             bias = self.bias.broadcast_to(x.shape)
             return std_x * weight + bias
         else:
-            return (x - self.momentum * self.running_mean.broadcast_to(x.shape)) / ops.power_scalar(self.momentum * self.running_var.broadcast_to(x.shape) + self.eps, 0.5)
+            std_x = (x - self.running_mean.broadcast_to(x.shape)) / ops.power_scalar(self.running_var.broadcast_to(x.shape) + self.eps, 0.5)
+            return std_x * self.weight.broadcast_to(x.shape) + self.bias.broadcast_to(x.shape)
             
             
         ### END YOUR SOLUTION
@@ -196,8 +199,8 @@ class LayerNorm1d(Module):
         super().__init__()
         self.dim = dim
         self.eps = eps
-        ### BEGIN YOUR SOLUTION
         self.weight = Parameter(init.ones(1, dim, device=device, dtype=dtype), device=device, dtype=dtype)
+        ### BEGIN YOUR SOLUTION
         self.bias = Parameter(init.zeros(1, dim, device=device, dtype=dtype), device=device, dtype=dtype)
         ### END YOUR SOLUTION
 
