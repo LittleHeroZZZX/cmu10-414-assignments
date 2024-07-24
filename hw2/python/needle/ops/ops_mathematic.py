@@ -212,7 +212,8 @@ class BroadcastTo(TensorOp):
             "The target shape's dimension count {} should be greater than \
                 or equal to the input shape's dimension count {}".format(len(self.shape), len(a.shape))
         for i in range(len(a.shape)):
-            assert self.shape[i] == a.shape[i] or a.shape[i] == 1, "The shape of two tensors should be compatible"
+            assert a.shape[-1 - i] == self.shape[-1 - i] or a.shape[-1 - i] == 1, \
+                "The input shape {} is not compatible with the target shape {}".format(a.shape, self.shape)
         return array_api.broadcast_to(a, self.shape)
         ### END YOUR SOLUTION
 
@@ -220,9 +221,9 @@ class BroadcastTo(TensorOp):
         ### BEGIN YOUR SOLUTION
         input_shape = node.inputs[0].shape
         ret = summation(out_grad, tuple(range(len(out_grad.shape) - len(input_shape))))
-        for i, dim in enumerate(input_shape):
-            if dim == 1 and self.shape[i] != 1:
-              ret = summation(ret, axes=(i,))
+        for i in range(len(input_shape)):
+            if input_shape[-1 - i] == 1 and self.shape[-1 - i] != 1:
+                ret = summation(ret, (len(input_shape) - 1 - i,))
         return reshape(ret, input_shape)
         ### END YOUR SOLUTION
 

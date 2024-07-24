@@ -103,11 +103,7 @@ class Linear(Module):
             self.bias = self.bias.reshape((1, self.out_features))
         y = ops.matmul(X, self.weight)
         if self.bias:
-            if len(y.shape) != len(self.bias.shape):
-                bias = self.bias.reshape((1,) * (len(y.shape) - len(self.bias.shape)) + self.bias.shape)
-            else:
-                bias = self.bias
-            y += ops.broadcast_to(bias, y.shape)
+            y += self.bias.broadcast_to(y.shape)
         return y
         ### END YOUR SOLUTION
 
@@ -139,7 +135,7 @@ class Sequential(Module):
         ### BEGIN YOUR SOLUTION
         y = x
         for module in self.modules:
-            y = module(y)
+            y = module(y)   
         return y
         
         ### END YOUR SOLUTION
@@ -223,8 +219,9 @@ class Dropout(Module):
 
     def forward(self, x: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
+        if not self.training:
+            return x
         mask = init.randb(*x.shape, p=1 - self.p)
-        res = ops.multiply(x, mask) / (1 - self.p)
         return x * mask / (1 - self.p)
         ### END YOUR SOLUTION
 
