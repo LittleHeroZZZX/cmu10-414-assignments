@@ -16,7 +16,7 @@ def xavier_normal(fan_in, fan_out, gain=1.0, **kwargs):
     ### END YOUR SOLUTION
 
 
-def kaiming_uniform(fan_in, fan_out, nonlinearity="relu", **kwargs):
+def xkaiming_uniform(fan_in, fan_out, nonlinearity="relu", **kwargs):
     assert nonlinearity == "relu", "Only relu supported currently"
     ### BEGIN YOUR SOLUTION
     if nonlinearity == "relu":
