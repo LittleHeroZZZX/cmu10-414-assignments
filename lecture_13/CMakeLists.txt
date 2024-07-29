@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.2)
 project(needle C CXX)
 
+set(CMAKE_C_COMPILER /usr/bin/gcc)
+set(CMAKE_CXX_COMPILER /usr/bin/g++)
+
 # find correct version of Python
 execute_process(COMMAND python3-config --prefix
   OUTPUT_VARIABLE Python_ROOT_DIR)
