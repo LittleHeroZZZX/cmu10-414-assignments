@@ -2,9 +2,13 @@ cmake_minimum_required(VERSION 3.5)
 project(needle C CXX)
 cmake_policy(SET CMP0146 OLD)
 
-# find correct version of Python
-execute_process(COMMAND python3-config --prefix
-  OUTPUT_VARIABLE Python_ROOT_DIR)
+# 指定 Python 可执行文件的路径
+set(Python_EXECUTABLE "/home/zhouxin/miniconda3/envs/cmu/bin/python")
+
+# 使用 python3-config 获取 Python 的根目录
+execute_process(COMMAND ${Python_EXECUTABLE} -c "import sys; print(sys.prefix)"
+  OUTPUT_VARIABLE Python_ROOT_DIR
+  OUTPUT_STRIP_TRAILING_WHITESPACE)
 find_package(Python COMPONENTS Development Interpreter REQUIRED)
 include_directories(${Python_INCLUDE_DIRS})
 
