@@ -247,7 +247,9 @@ class NDArray:
         """
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        assert prod(self.shape) == prod(new_shape), "Product of shapes must be equal"
+        assert self.is_compact(), "Matrix must be compact"
+        return self.as_strided(new_shape, NDArray.compact_strides(new_shape))
         ### END YOUR SOLUTION
 
     def permute(self, new_axes):
@@ -272,7 +274,9 @@ class NDArray:
         """
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        new_shape = tuple(self.shape[i] for i in new_axes)
+        new_strides = tuple(self.strides[i] for i in new_axes)
+        return NDArray.make(shape=new_shape, strides=new_strides, device=self.device, handle=self._handle, offset=self._offset)
         ### END YOUR SOLUTION
 
     def broadcast_to(self, new_shape):
@@ -296,7 +300,14 @@ class NDArray:
         """
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        assert all(
+            new_shape[i] == self.shape[i] or self.shape[i] == 1
+            for i in range(len(self.shape))
+        ), "Invalid broadcast shape"
+        new_strides = tuple(
+            self.strides[i] if self.shape[i] == new_shape[i] else 0 for i in range(len(self.shape))
+        )
+        return self.compact().as_strided(new_shape, new_strides)
         ### END YOUR SOLUTION
 
     ### Get and set elements
@@ -363,7 +374,10 @@ class NDArray:
         assert len(idxs) == self.ndim, "Need indexes equal to number of dimensions"
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        shape = tuple((s.stop - s.start) // s.step for s in idxs)
+        strides = tuple(s.step * self.strides[i] for i, s in enumerate(idxs))
+        offset = reduce(operator.add, (s.start * self.strides[i] for i, s in enumerate(idxs)))
+        return NDArray.make(shape, strides, device=self.device, handle=self._handle, offset=offset)
         ### END YOUR SOLUTION
 
     def __setitem__(self, idxs, other):
