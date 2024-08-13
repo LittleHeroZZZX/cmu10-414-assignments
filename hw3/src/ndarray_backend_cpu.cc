@@ -254,7 +254,16 @@ void Matmul(const AlignedArray& a, const AlignedArray& b, AlignedArray* out, uin
    */
 
   /// BEGIN SOLUTION
-  assert(false && "Not Implemented");
+  for(uint32_t i = 0; i < m*p; i++){
+    out->ptr[i] = 0;
+  }
+  for (uint32_t i=0; i<m; i++) {
+    for (uint32_t j=0; j<p; j++) {
+      for (uint32_t k=0; k<n; k++) {
+        out->ptr[i*p + j] += a.ptr[i*n + k] * b.ptr[k*p + j];
+      }
+    }
+  }
   /// END SOLUTION
 }
 
@@ -284,7 +293,14 @@ inline void AlignedDot(const float* __restrict__ a,
   out = (float*)__builtin_assume_aligned(out, TILE * ELEM_SIZE);
 
   /// BEGIN SOLUTION
-  assert(false && "Not Implemented");
+
+  for (uint32_t i=0; i<TILE; i++) {
+    for (uint32_t j=0; j<TILE; j++) {
+      for (uint32_t k=0; k<TILE; k++) {
+        out[i*TILE + j] += a[i*TILE + k] * b[k*TILE + j];
+      }
+    }
+  }
   /// END SOLUTION
 }
 
@@ -310,7 +326,18 @@ void MatmulTiled(const AlignedArray& a, const AlignedArray& b, AlignedArray* out
    *
    */
   /// BEGIN SOLUTION
-  assert(false && "Not Implemented");
+  for(uint32_t i=0; i<m*p; i++){
+    out->ptr[i] = 0;
+  }
+
+
+  for (uint32_t i=0; i<m/TILE; i++) {
+    for (uint32_t j=0; j<p/TILE; j++) {
+      for (uint32_t k=0; k<n/TILE; k++) {
+        AlignedDot(a.ptr + (i*n/TILE + k)*TILE*TILE, b.ptr + (k*p/TILE + j)*TILE*TILE, out->ptr + (i*p/TILE + j)*TILE*TILE);
+      }
+    }
+  }
   /// END SOLUTION
 }
 
@@ -325,7 +352,12 @@ void ReduceMax(const AlignedArray& a, AlignedArray* out, size_t reduce_size) {
    */
 
   /// BEGIN SOLUTION
-  assert(false && "Not Implemented");
+  for(size_t i = 0; i < out->size; i++){
+    out->ptr[i] = a.ptr[i*reduce_size];
+    for(size_t j = 1; j < reduce_size; j++){
+      out->ptr[i] = std::max(out->ptr[i], a.ptr[i*reduce_size + j]);
+    }
+  }
   /// END SOLUTION
 }
 
@@ -340,7 +372,12 @@ void ReduceSum(const AlignedArray& a, AlignedArray* out, size_t reduce_size) {
    */
 
   /// BEGIN SOLUTION
-  assert(false && "Not Implemented");
+  for(size_t i = 0; i < out->size; i++){
+    out->ptr[i] = 0;
+    for(size_t j = 0; j < reduce_size; j++){
+      out->ptr[i] += a.ptr[i*reduce_size + j];
+    }
+  }
   /// END SOLUTION
 }
 
@@ -430,9 +467,9 @@ PYBIND11_MODULE(ndarray_backend_cpu, m) {
   // m.def("ewise_exp", EwiseExp);
   // m.def("ewise_tanh", EwiseTanh);
 
-  // m.def("matmul", Matmul);
-  // m.def("matmul_tiled", MatmulTiled);
+  m.def("matmul", Matmul);
+  m.def("matmul_tiled", MatmulTiled);
 
-  // m.def("reduce_max", ReduceMax);
-  // m.def("reduce_sum", ReduceSum);
+  m.def("reduce_max", ReduceMax);
+  m.def("reduce_sum", ReduceSum);
 }
