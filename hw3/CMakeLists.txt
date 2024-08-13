@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.5)
 project(needle C CXX)
 cmake_policy(SET CMP0146 OLD)
+set(CMAKE_CXX_COMPILER "/usr/bin/clang++-17")
+set(CUDA_HOST_COMPILER "/usr/bin/clang++-17")
 
 # 指定 Python 可执行文件的路径
 set(Python_EXECUTABLE "/home/zhouxin/miniconda3/envs/cmu/bin/python")
