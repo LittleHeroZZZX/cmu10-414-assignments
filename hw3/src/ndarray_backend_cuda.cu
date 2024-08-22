@@ -78,7 +78,14 @@ void Fill(CudaArray* out, scalar_t val) {
 ////////////////////////////////////////////////////////////////////////////////
 
 // Untility function to convert contiguous index i to memory location from strides
-
+__device__ size_t indexToMemLocation(size_t index, CudaVec shape, CudaVec strides, size_t offset){
+  size_t ret = offset;
+  for(int i=shape.size-1; i>=0; i--){
+    ret += (index % shape.data[i]) * strides.data[i];
+    index /= shape.data[i];
+  }
+  return ret;
+}
 
 
 __global__ void CompactKernel(const scalar_t* a, scalar_t* out, size_t size, CudaVec shape,
@@ -98,7 +105,10 @@ __global__ void CompactKernel(const scalar_t* a, scalar_t* out, size_t size, Cud
   size_t gid = blockIdx.x * blockDim.x + threadIdx.x;
 
   /// BEGIN SOLUTION
-  assert(false && "Not Implemented");
+  if(gid >= size)
+    return;
+  size_t memLocation = indexToMemLocation(gid, shape, strides, offset);
+  out[gid] = a[memLocation];
   /// END SOLUTION
 }
 
