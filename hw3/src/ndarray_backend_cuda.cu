@@ -466,10 +466,6 @@ __global__ void MatmulKernel(const scalar_t* a, const scalar_t* b, scalar_t* c, 
       }
       for(int reg_y=0; reg_y<V; reg_y++){
         int shared_y = reg_y + thread_y * V;
-        if(shared_y >= TILE){
-          printf("quit: thread id: %d, shared_y: %d, TILE: %d\n", thread_id, shared_y, TILE);
-          break;
-        }
         // a_reg[reg_y] = a_shared[stripe_i][shared_y];
         b_reg[reg_y] = b_shared[stripe_i][shared_y];
       }
