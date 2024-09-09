@@ -164,6 +164,7 @@ cython_debug/
 
 .idea/
 data/
+!hw4/python/needle/data/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
