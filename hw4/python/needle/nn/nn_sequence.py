@@ -38,7 +38,12 @@ class RNNCell(Module):
         """
         super().__init__()
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        bound = 1 / np.sqrt(hidden_size)
+        self.W_ih = Parameter(init.rand(input_size, hidden_size, low=-bound, high=bound, device=device, dtype=dtype))
+        self.W_hh = Parameter(init.rand(hidden_size, hidden_size, low=-bound, high=bound, device=device, dtype=dtype))
+        self.bias_ih = Parameter(init.rand(hidden_size, low=-bound, high=bound, device=device, dtype=dtype)) if bias else None
+        self.bias_hh = Parameter(init.rand(hidden_size, low=-bound, high=bound, device=device, dtype=dtype)) if bias else None
+        self.nonlinearity = ops.tanh if nonlinearity == 'tanh' else ops.relu
         ### END YOUR SOLUTION
 
     def forward(self, X, h=None):
@@ -53,7 +58,15 @@ class RNNCell(Module):
             for each element in the batch.
         """
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        if h is None:
+            h = init.zeros(X.shape[0], self.W_hh.shape[0], device=X.device, dtype=X.dtype)
+        Z = X@self.W_ih + h@self.W_hh
+        if self.bias_ih:
+            bias = self.bias_ih + self.bias_hh
+            bias = bias.reshape((1, bias.shape[0]))
+            bias = bias.broadcast_to(Z.shape)
+            Z += bias
+        return self.nonlinearity(Z)
         ### END YOUR SOLUTION
 
 
@@ -82,7 +95,10 @@ class RNN(Module):
         """
         super().__init__()
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        self.rnn_cells = []
+        self.rnn_cells.append(RNNCell(input_size, hidden_size, bias, nonlinearity, device, dtype))
+        for i in range(1, num_layers):
+            self.rnn_cells.append(RNNCell(hidden_size, hidden_size, bias, nonlinearity, device, dtype))
         ### END YOUR SOLUTION
 
     def forward(self, X, h0=None):
@@ -98,7 +114,21 @@ class RNN(Module):
         h_n of shape (num_layers, bs, hidden_size) containing the final hidden state for each element in the batch.
         """
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        seq_len = X.shape[0]
+        layer_num = len(self.rnn_cells)
+        if h0 is None:
+            h0 = init.zeros(len(self.rnn_cells), X.shape[1], self.rnn_cells[0].W_hh.shape[0], device=X.device, dtype=X.dtype)
+        h_input = list(ops.split(h0, 0)) # list length = num_layers, element shape = (bs, hidden_size)
+        X_input = list(ops.split(X, 0)) # list length = seq_len, element shape = (bs, input_size)
+        for i in range(seq_len):
+            for j in range(layer_num):
+                X_input[i] = self.rnn_cells[j](X_input[i], h_input[j])
+                h_input[j] = X_input[i]
+        output = ops.stack(X_input, 0) # output features of last layer == input X of last+1 layer
+        h_n = ops.stack(h_input, 0)
+        return output, h_n
+        
+            
         ### END YOUR SOLUTION
 
 
