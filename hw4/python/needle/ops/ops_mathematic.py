@@ -187,7 +187,7 @@ class Reshape(TensorOp):
         for i in a.shape:
             real_size *= i
         assert expect_size == real_size , "The reshape size is not compatible"
-        return array_api.reshape(a, self.shape)
+        return array_api.reshape(a.compact(), self.shape)
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
@@ -334,7 +334,7 @@ class ReLU(TensorOp):
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        relu_mask = Tensor(node.inputs[0].cached_data > 0)
+        relu_mask = Tensor(node.inputs[0].cached_data > 0, device=node.inputs[0].device)
         return out_grad * relu_mask
         ### END YOUR SOLUTION
 
