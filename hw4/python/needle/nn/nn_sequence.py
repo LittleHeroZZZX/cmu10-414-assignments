@@ -15,7 +15,7 @@ class Sigmoid(Module):
     def forward(self, x: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
         print("hit Sigmoid::forward, x.requires_grad = ", x.requires_grad)
-        return ops.power_scalar(1 + ops.exp(x), -1)
+        return ops.power_scalar(1 + ops.exp(-x), -1)
         ### END YOUR SOLUTION
 
 class RNNCell(Module):
@@ -192,7 +192,7 @@ class LSTMCell(Module):
             bias = bias.reshape((1, bias.shape[0]))
             bias = bias.broadcast_to(Z.shape)
             Z += bias
-        stripes = list(ops.split(Z, 0))
+        stripes = list(ops.split(Z, 1))
         i = self.sigmoid(ops.stack(stripes[0: hidden_size], 1))
         f = self.sigmoid(ops.stack(stripes[hidden_size: 2*hidden_size], 1))
         g = ops.tanh(ops.stack(stripes[2*hidden_size: 3*hidden_size], 1))
