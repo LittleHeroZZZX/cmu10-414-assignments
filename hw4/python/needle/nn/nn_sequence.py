@@ -14,7 +14,6 @@ class Sigmoid(Module):
 
     def forward(self, x: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
-        print("hit Sigmoid::forward, x.requires_grad = ", x.requires_grad)
         return ops.power_scalar(1 + ops.exp(-x), -1)
         ### END YOUR SOLUTION
 
