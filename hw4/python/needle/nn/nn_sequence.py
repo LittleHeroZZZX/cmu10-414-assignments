@@ -14,7 +14,8 @@ class Sigmoid(Module):
 
     def forward(self, x: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        print("hit Sigmoid::forward, x.requires_grad = ", x.requires_grad)
+        return ops.power_scalar(1 + ops.exp(x), -1)
         ### END YOUR SOLUTION
 
 class RNNCell(Module):
@@ -152,7 +153,12 @@ class LSTMCell(Module):
         """
         super().__init__()
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        bound = 1.0 / np.sqrt(hidden_size)
+        self.W_ih = Parameter(init.rand(input_size, 4*hidden_size, low=-bound, high=bound, device=device, dtype=dtype))
+        self.W_hh = Parameter(init.rand(hidden_size, 4*hidden_size, low=-bound, high=bound, device=device, dtype=dtype))
+        self.bias_ih = Parameter(init.rand(4*hidden_size, low=-bound, high=bound, device=device, dtype=dtype)) if bias else None
+        self.bias_hh = Parameter(init.rand(4*hidden_size, low=-bound, high=bound, device=device, dtype=dtype)) if bias else None
+        self.sigmoid = Sigmoid()
         ### END YOUR SOLUTION
 
 
@@ -173,7 +179,28 @@ class LSTMCell(Module):
             element in the batch.
         """
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        bs = X.shape[0]
+        hidden_size = self.W_hh.shape[0]
+        if h is None:
+            h0 = init.zeros(bs, hidden_size, device=X.device, dtype=X.dtype)
+            c0 = init.zeros(bs, hidden_size, device=X.device, dtype=X.dtype)
+        else:
+            h0, c0 = h
+        Z = X@self.W_ih + h0@self.W_hh # [bs, 4*hidden_size]
+        if self.bias_ih:
+            bias = self.bias_ih + self.bias_hh
+            bias = bias.reshape((1, bias.shape[0]))
+            bias = bias.broadcast_to(Z.shape)
+            Z += bias
+        stripes = list(ops.split(Z, 0))
+        i = self.sigmoid(ops.stack(stripes[0: hidden_size], 1))
+        f = self.sigmoid(ops.stack(stripes[hidden_size: 2*hidden_size], 1))
+        g = ops.tanh(ops.stack(stripes[2*hidden_size: 3*hidden_size], 1))
+        o = self.sigmoid(ops.stack(stripes[3*hidden_size: 4*hidden_size], 1))
+        c = f * c0 + i * g
+        h = o * ops.tanh(c)
+        return h, c
+        
         ### END YOUR SOLUTION
 
 
@@ -201,7 +228,10 @@ class LSTM(Module):
             of shape (4*hidden_size,).
         """
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        self.lstm_cells = []
+        self.lstm_cells.append(LSTMCell(input_size, hidden_size, bias, device, dtype))
+        for i in range(1, num_layers):
+            self.lstm_cells.append(LSTMCell(hidden_size, hidden_size, bias, device, dtype))
         ### END YOUR SOLUTION
 
     def forward(self, X, h=None):
@@ -222,7 +252,26 @@ class LSTM(Module):
             h_n of shape (num_layers, bs, hidden_size) containing the final hidden cell state for each element in the batch.
         """
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        seq_len, bs, _ = X.shape
+        num_layers = len(self.lstm_cells)
+        hidden_size = self.lstm_cells[0].W_hh.shape[0]
+        if h is None:
+            h0 = init.zeros(num_layers, bs, hidden_size, device=X.device, dtype=X.dtype)
+            c0 = init.zeros(num_layers, bs, hidden_size, device=X.device, dtype=X.dtype)
+        else:
+            h0, c0 = h
+        h_input = list(ops.split(h0, 0))
+        c_input = list(ops.split(c0, 0))
+        X_input = list(ops.split(X, 0))
+        for i in range(seq_len):
+            for j in range(num_layers):
+                X_input[i], c_input[j] = self.lstm_cells[j](X_input[i], (h_input[j], c_input[j]))
+                h_input[j] = X_input[i]
+        output = ops.stack(X_input, 0)
+        h_n = ops.stack(h_input, 0)
+        c_n = ops.stack(c_input, 0)
+        return output, (h_n, c_n)
+        
         ### END YOUR SOLUTION
 
 class Embedding(Module):

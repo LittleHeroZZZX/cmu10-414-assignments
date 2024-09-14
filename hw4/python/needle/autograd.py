@@ -72,6 +72,7 @@ class TensorOp(Op):
     """Op class specialized to output tensors, will be alternate subclasses for other structures"""
 
     def __call__(self, *args):
+        print("hit TensorOp::__call__!, self is ", self)
         return Tensor.make_from_op(self, args)
 
 
