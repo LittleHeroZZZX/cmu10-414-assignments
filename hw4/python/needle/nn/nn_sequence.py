@@ -191,11 +191,14 @@ class LSTMCell(Module):
             bias = bias.reshape((1, bias.shape[0]))
             bias = bias.broadcast_to(Z.shape)
             Z += bias
-        stripes = list(ops.split(Z, 1))
-        i = self.sigmoid(ops.stack(stripes[0: hidden_size], 1))
-        f = self.sigmoid(ops.stack(stripes[hidden_size: 2*hidden_size], 1))
-        g = ops.tanh(ops.stack(stripes[2*hidden_size: 3*hidden_size], 1))
-        o = self.sigmoid(ops.stack(stripes[3*hidden_size: 4*hidden_size], 1))
+        # stripes = list(ops.split(Z, 1))
+        # i = self.sigmoid(ops.stack(stripes[0: hidden_size], 1))
+        # f = self.sigmoid(ops.stack(stripes[hidden_size: 2*hidden_size], 1))
+        # g = ops.tanh(ops.stack(stripes[2*hidden_size: 3*hidden_size], 1))
+        # o = self.sigmoid(ops.stack(stripes[3*hidden_size: 4*hidden_size], 1))
+        Z = Z.reshape((bs, 4, hidden_size))
+        i, f, g, o = ops.split(Z, 1)
+        i, f, g, o = self.sigmoid(i), self.sigmoid(f), ops.tanh(g), self.sigmoid(o)
         c = f * c0 + i * g
         h = o * ops.tanh(c)
         return h, c
