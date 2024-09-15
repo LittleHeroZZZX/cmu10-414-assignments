@@ -99,10 +99,10 @@ class Linear(Module):
 
     def forward(self, X: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
-        if self.bias.shape != (1, self.out_features):
-            self.bias = self.bias.reshape((1, self.out_features))
         y = ops.matmul(X, self.weight)
         if self.bias:
+            if self.bias.shape != (1, self.out_features):
+                self.bias = self.bias.reshape((1, self.out_features))
             y += self.bias.broadcast_to(y.shape)
         return y
         ### END YOUR SOLUTION
@@ -206,13 +206,26 @@ class LayerNorm1d(Module):
         super().__init__()
         self.dim = dim
         self.eps = eps
+        self.weight = Parameter(init.ones(1, dim, device=device, dtype=dtype), device=device, dtype=dtype)
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        self.bias = Parameter(init.zeros(1, dim, device=device, dtype=dtype), device=device, dtype=dtype)
         ### END YOUR SOLUTION
 
     def forward(self, x: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        input_shape = x.shape
+        if(len(input_shape)> 2):
+            batch_size = 1
+            for i in range(0, len(input_shape) - 1):
+                batch_size *= input_shape[i]
+            x = x.reshape((batch_size, input_shape[-1]))
+        batch_size, feature_size = x.shape
+        mean = (x.sum(axes=(1, )) / feature_size).reshape((batch_size, 1)).broadcast_to(x.shape)
+        var = (((x - mean) ** 2).sum(axes=(1, )) / feature_size).reshape((batch_size, 1)).broadcast_to(x.shape)
+        std_x = (x - mean) / ops.power_scalar(var + self.eps, 0.5)
+        weight = self.weight.broadcast_to(x.shape)
+        bias = self.bias.broadcast_to(x.shape)
+        return (std_x * weight + bias).reshape(input_shape)
         ### END YOUR SOLUTION
 
 
@@ -223,8 +236,12 @@ class Dropout(Module):
 
     def forward(self, x: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        if not self.training:
+            return x
+        mask = init.randb(*x.shape, p=1 - self.p, dtype="float32", device=x.device)
+        return x * mask / (1 - self.p)
         ### END YOUR SOLUTION
+
 
 
 class Residual(Module):
