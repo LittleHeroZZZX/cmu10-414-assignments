@@ -101,9 +101,9 @@ class Linear(Module):
         ### BEGIN YOUR SOLUTION
         y = ops.matmul(X, self.weight)
         if self.bias:
-            if self.bias.shape != (1, self.out_features):
-                self.bias = self.bias.reshape((1, self.out_features))
-            y += self.bias.broadcast_to(y.shape)
+            boradcast_shape = [1] * (len(y.shape) - 1) + [self.out_features]
+            bias = self.bias.reshape(boradcast_shape).broadcast_to(y.shape)
+            y += bias
         return y
         ### END YOUR SOLUTION
 
