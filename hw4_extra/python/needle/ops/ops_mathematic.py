@@ -260,7 +260,16 @@ def summation(a, axes=None):
 class MatMul(TensorOp):
     def compute(self, a, b):
         ### BEGIN YOUR SOLUTION
-        return a@b
+        a_shape = a.shape
+        if len(a.shape) > 2:
+            batch_size = 1
+            for i in range(0, len(a.shape) - 1):
+                batch_size *= a.shape[i]
+            a = a.reshape((batch_size, a_shape[-1]))
+        out = a@b
+        if len(a_shape) > 2:
+            out = out.reshape((*a_shape[:-1], b.shape[-1]))
+        return out
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
