@@ -108,7 +108,14 @@ class MultiHeadAttention(Module):
         probs = None
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        sqrt_d = np.sqrt(q_dim)
+        Z = self.matmul(q, k) / sqrt_d
+        if self.causal:
+            mask = self.create_causal_mask(queries_len, keys_values_len, self.device)
+            Z = Z + mask.broadcast_to(Z.shape)
+        probs = self.softmax(Z)
+        probs = self.dropout(probs)
+        result = self.matmul(probs, v.transpose((2, 3)))
         ### END YOUR SOLUTION
 
         return result, probs
@@ -202,7 +209,14 @@ class AttentionLayer(Module):
         result = None
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        q, k, v = self.prenorm_q(q), self.prenorm_k(k), self.prenorm_v(v)
+        q, k, v = self.q_projection(q), self.k_projection(k), self.v_projection(v)
+        q = ops.permute(q.reshape((batch_size, queries_len, self.num_head, self.dim_head)), (0, 2, 1, 3))
+        k = ops.permute(k.reshape((batch_size, keys_values_len, self.num_head, self.dim_head)), (0, 2, 1, 3))
+        v = ops.permute(v.reshape((batch_size, keys_values_len, self.num_head, self.dim_head)), (0, 2, 1, 3))
+        attn_res, _ = self.attn(q, k, v)
+        attn_res = ops.permute(attn_res, (0, 2, 1, 3)).reshape((batch_size, keys_values_len, self.num_head * self.dim_head))
+        result = self.out_projection(attn_res)
         ### END YOUR SOLUTION
 
         return result
